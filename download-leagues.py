@@ -1,39 +1,56 @@
 from bs4 import BeautifulSoup
 import urllib
+import re, os
 
 url = "http://football-data.co.uk/"
 dataUrl= "data.php"
-file = open("newfile.txt", "w")
 
-def getLeagueContents(url):
-  html = getUrlContents(url)
+def getLeagueContents(url, leagueUrl):
+  html = getUrlContents(url + leagueUrl)
   bs = BeautifulSoup(html)
 
   tables = bs.findAll('td', valign="top")
-  for table in tables:
-      titles = table.findAll("i")
 
-      for title in titles:
-        if not "Last" in str(title):
-          print title
+  for table in tables:
 
       anchors = table.findAll("a")
+
+      folderTitles = table.find("b")
+      if folderTitles:
+        for folderTitle in folderTitles:
+          if "Data" in folderTitle:
+            folderTitle = re.sub('Data Files: ', '', folderTitle)
+            
+            if not os.path.exists("data/" + folderTitle):
+              os.makedirs("data/" + folderTitle)
+
       for anchor in anchors:
         if anchor:
+
           if "csv" in str(anchor['href']):
-            print anchor['href'].split('/')[1]
 
-     
-  #file.write(str(tables) + "\n")
+            FirstPartOfYear = anchor['href'].split('/')[1][0:2]
+            SecondPartOfYear = anchor['href'].split('/')[1][2:]
+            
+            if "0" in str(FirstPartOfYear) or "1" in str(FirstPartOfYear):
+              FirstPartOfYear = "20" + FirstPartOfYear
+            else:
+              FirstPartOfYear = "19" + FirstPartOfYear
 
-  # for table in tables:
-  #   rows = table.findChildren('tr')
-  #   for row in rows:
-  #     cells = row.findChildren('td')
-  #     for cell in cells:
-  #       value = cell.a
-  #       if value:
-  #         file.write(str(value) + "\n")
+            if "0" in str(SecondPartOfYear) or "1" in str(SecondPartOfYear):
+              SecondPartOfYear = "20" + SecondPartOfYear
+            else:
+              SecondPartOfYear = "19" + SecondPartOfYear
+
+            path = "data/" + folderTitle + "/" + anchor.text  + "/" + FirstPartOfYear + " " + SecondPartOfYear
+
+            if not os.path.exists(path):
+              os.makedirs(path)
+
+            csvfilepath = path + "/" + anchor['href'].split('/')[2]
+
+            if not os.path.isfile(csvfilepath) and not os.access(csvfilepath, os.R_OK):
+              urllib.urlretrieve (url + anchor['href'], csvfilepath)
 
 def getUrlContents(url):
   response = urllib.urlopen(url)
@@ -48,11 +65,9 @@ bs = BeautifulSoup(html)
 
 rows = bs.find("table",  cellspacing="2", border="0").findChildren(['th', 'tr'])
 
-#for row in rows:
-cells = rows[0].findChildren('td')
-for cell in cells:
-    value = cell.a
-    if value:
-      getLeagueContents(url + value['href'])
-
-file.close()
+for row in rows:
+  cells = row.findChildren('td')
+  for cell in cells:
+      value = cell.a
+      if value:
+        getLeagueContents(url, value['href'])
