@@ -17,7 +17,7 @@ def chunk_report(pbar, bytes_so_far, chunk_size, total_size):
 
 
 def chunk_read(pbar, response, chunk_size=8192, report_hook=None):
-  total_size = response.info().getheader('Content-Length').strip()
+  total_size = response.headers['Content-Length']
   total_size = int(total_size)
   bytes_so_far = 0
 
@@ -77,11 +77,16 @@ def getLeagueContents(url, leagueUrl, args):
           csvfilepath = path + "/" + anchor['href'].split('/')[2]
 
           if not os.path.isfile(csvfilepath) and not os.access(csvfilepath, os.R_OK):
-            response = urllib2.urlopen(url + anchor['href'], csvfilepath)
-            print anchor.text  + " " + FirstPartOfYear + "-" + SecondPartOfYear
-            pbar = ProgressBar(widgets=[Percentage(), Bar()], maxval=10).start()
-            chunk_read(pbar, response, report_hook=chunk_report)
-            pbar.finish()
+            response = urllib2.urlopen(url + anchor['href'])
+
+            print anchor.text  + " " + FirstPartOfYear + "-" + SecondPartOfYear + " " + csvfilepath
+            
+            
+            with ProgressBar(widgets=[Percentage(), Bar()], maxval=10) as progress:
+              chunk_read(progress, response, report_hook=chunk_report)
+                
+            with open(csvfilepath, "wb") as code:
+              code.write(response.read())
 
 def getUrlContents(url, args):
   if args.p:

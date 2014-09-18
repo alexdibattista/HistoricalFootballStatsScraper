@@ -1,4 +1,5 @@
 import pymongo
+import glob
 
 client = pymongo.MongoClient()
 
@@ -6,7 +7,7 @@ client = pymongo.MongoClient()
 db = client.open_football
 
 exists = db.matches_collection.find({"HomeTeam": "Chievo",
-"AwayTeam": "Juventus",})
+"AwayTeam": "Juventus"})
 
 
 match = {
@@ -76,10 +77,10 @@ match = {
 "BbAvAHA": "1.9"
 }
 
-if exists.count() == 0:
-  matches = db.matches_collection
-  matches.save(match)
+# if exists.count() == 0:
+#   matches = db.matches_collection
+#   matches.save(match)
 
-
-print exists.count()
+csvs = glob.glob("/data/Italy/*/*/*.csv")
+print csvs
 
