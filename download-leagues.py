@@ -82,11 +82,12 @@ def getLeagueContents(url, leagueUrl, args):
             print anchor.text  + " " + FirstPartOfYear + "-" + SecondPartOfYear + " " + csvfilepath
             
             
-            with ProgressBar(widgets=[Percentage(), Bar()], maxval=10) as progress:
-              chunk_read(progress, response, report_hook=chunk_report)
-                
-            with open(csvfilepath, "wb") as code:
-              code.write(response.read())
+            # with ProgressBar(widgets=[Percentage(), Bar()], maxval=10) as progress:
+            #   chunk_read(progress, response, report_hook=chunk_report)
+
+
+            with open(csvfilepath, "w") as code:
+              code.write(unicode(response.read(), errors='ignore'))
 
 def getUrlContents(url, args):
   if args.p:
