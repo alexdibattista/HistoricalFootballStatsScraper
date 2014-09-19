@@ -1,7 +1,8 @@
 import pymongo
 import glob
 import os
-import csv, json 
+import csv, json
+from itertools import izip
 
 client = pymongo.MongoClient()
 
@@ -26,14 +27,18 @@ for path, subdirs, files in os.walk("data/"):
                 print name + path
                 with open(os.path.join(path, name), 'rb') as csvfile:
                     reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-                    headers = next(reader)
-                    
+                    removeHeaders = next(reader)
+                    headers = ['Div','Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','HTHG','HTAG','HTR','Referee','HS','AS','HST','AST', 'HF', 'AF', 'HC', 'AC', 'HY', 'AY', 'HR', 'AR','B365H','B365D','B365A','BWH','BWD','BWA','IWH','IWD','IWA','LBH','LBD','LBA','PSH','PSD','PSA','WHH','WHD','WHA','SJH','SJD','SJA','VCH','VCD','VCA','Bb1X2','BbMxH','BbAvH','BbMxD','BbAvD','BbMxA','BbAvA','BbOU','BbMx>2.5','BbAv>2.5','BbMx<2.5','BbAv<2.5','BbAH','BbAHh','BbMxAHH','BbAvAHH','BbMxAHA','BbAvAHA']
+
                     for line in reader:
                         if set(line).pop() != '':
-                            out = [dict(zip(headers, line))]
-                            matchJsonObj = json.dumps(out)
+                            matchList = iter(line)
+                            out = dict(izip(headers, matchList))
+                            print type(out)
+                            
 
-                            exists = db.matches_collection.find(matchJsonObj)
+                            exists = db.matches_collection.find(out)
                             if exists.count() == 0:
-                              matches = db.matches_collection
-                              matches.save(matchJsonObj)
+                                print "doesn't exist"
+                                # matches = db.matches_collection
+                                # matches.save(matchJsonObj)
