@@ -80,11 +80,10 @@ def getLeagueContents(url, leagueUrl, args):
             response = urllib2.urlopen(url + anchor['href'])
 
             print anchor.text  + " " + FirstPartOfYear + "-" + SecondPartOfYear + " " + csvfilepath
-            
-            
+
+            # broken download progressbar
             # with ProgressBar(widgets=[Percentage(), Bar()], maxval=10) as progress:
             #   chunk_read(progress, response, report_hook=chunk_report)
-
 
             with open(csvfilepath, "w") as code:
               code.write(unicode(response.read(), errors='ignore'))
@@ -101,11 +100,8 @@ def getUrlContents(url, args):
   return html
 
 def main(url, args):
-
   html = getUrlContents(url + "data.php", args)
-
   bs = BeautifulSoup(html)
-
   rows = bs.find("table",  cellspacing="2", border="0").findChildren(['th', 'tr'])
 
   for row in rows:
