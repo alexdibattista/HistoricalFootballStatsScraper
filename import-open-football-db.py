@@ -11,13 +11,13 @@ import json
 if __name__ == "__main__":
     db = pymongo.MongoClient().open_football
 
-    print "parsing csvs"
+    print "parsing CSV'S"
 
     for path, subdirs, files in os.walk("data/"):
         for name in files:
             for path, subdirs, files in os.walk("data"):
                 for name in files:
-                    print name + path
+                    print path
                     matches = db.matches_collection.initialize_ordered_bulk_op()
                     with open(os.path.join(path, name), 'rb') as csvfile:
                         reader = csv.reader(csvfile, delimiter=',', quotechar='|')
@@ -33,6 +33,7 @@ if __name__ == "__main__":
                                 if exists.count() == 0:
                                     matches.insert(match)
                     try:
+                        print "Imported " + path
                         matches.execute()
                     except BulkWriteError as bwe:
                         pprint(bwe.details)
