@@ -12,13 +12,14 @@ if __name__ == "__main__":
     db = pymongo.MongoClient().open_football
 
     print "parsing CSV'S"
-
+    bulk_matches = db.matches_collection.initialize_ordered_bulk_op()
+    matches = []
     for path, subdirs, files in os.walk("data/"):
         for name in files:
             for path, subdirs, files in os.walk("data"):
                 for name in files:
                     print path
-                    matches = db.matches_collection.initialize_ordered_bulk_op()
+                    
                     with open(os.path.join(path, name), 'rb') as csvfile:
                         reader = csv.reader(csvfile, delimiter=',', quotechar='|')
                         removeHeaders = next(reader)
@@ -28,12 +29,15 @@ if __name__ == "__main__":
                             if set(line).pop() != '':
                                 matchList = iter(line)
                                 match = dict(izip(headers, matchList))
+                                matches.append(match)
 
-                                exists = db.matches_collection.find(match)
-                                if exists.count() == 0:
-                                    matches.insert(match)
-                    try:
-                        print "Imported " + path
-                        matches.execute()
-                    except BulkWriteError as bwe:
-                        pprint(bwe.details)
+                                # exists = db.matches_collection.find(match)
+                                # if exists.count() == 0:
+                                
+                                    
+    try:
+        print "Imported " + path
+        bulk_matches.insert(matches)
+        bulk_matches.execute()
+    except BulkWriteError as bwe:
+        pprint(bwe.details)
