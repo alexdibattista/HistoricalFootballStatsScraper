@@ -43,12 +43,12 @@ def getLeagueContents(url, leagueUrl, args):
 
         folderTitles = table.find("b")
         if folderTitles:
-        for folderTitle in folderTitles:
-            if "Data" in folderTitle:
-                folderTitle = re.sub('Data Files: ', '', folderTitle)
+            for folderTitle in folderTitles:
+                if "Data" in folderTitle:
+                    folderTitle = re.sub('Data Files: ', '', folderTitle)
 
-            if not os.path.exists("data/" + folderTitle):
-                os.makedirs("data/" + folderTitle)
+                if not os.path.exists("data/" + folderTitle):
+                    os.makedirs("data/" + folderTitle)
 
         for anchor in anchors:
             if anchor:
