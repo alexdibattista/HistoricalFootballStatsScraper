@@ -30,10 +30,12 @@ def import_leagues():
                         matchList = iter(line)
                         match = dict(izip(headers, matchList))
 
-                        bulk_matches.insert(match)
+                        try:
+                            match["Date"] = datetime.datetime.strptime(match["Date"], "%d/%m/%y")
+                        except Exception, e:
+                            match["Date"] = datetime.datetime.strptime(match["Date"], "%d/%m/%Y")
 
-                        # exists = db.matches_collection.find(match)
-                        # if exists.count() == 0:
+                        bulk_matches.insert(match)
             
     try:
         print "Imported data"
@@ -69,35 +71,6 @@ def change_league_names():
     bulk.find({ "Div":"T1"}).update({ "$set": {"Div": "Futbol Ligi 1 " }})
     bulk.execute()
 
-
-def update_match_string_date_to_datetime():
-    print "Updating Match Dates"
-    db = pymongo.MongoClient().open_football
-    # cursor = db.matches_collection.find()
-    matches = db.matches_collection.find()
-    bulk = db.matches_collection.initialize_ordered_bulk_op()
-
-    # while (next(cursor, None)):
-    #     doc = cursor.next();
-    #     try:
-    #         date = datetime.datetime.strptime(doc["Date"], "%d/%m/%y")
-    #     except Exception, e:
-    #         date = datetime.datetime.strptime(doc["Date"], "%d/%m/%Y")
-
-    #     db.matches_collection.update({"Date" : doc["Date"]}, {"$set" : {"Date" : date}})
-
-    for match in matches:
-        try:
-            date = datetime.datetime.strptime(match["Date"], "%d/%m/%y")
-        except Exception, e:
-            date = datetime.datetime.strptime(match["Date"], "%d/%m/%Y")
-
-        bulk.find({"_id": match["_id"]}).update({'$set': {'Date': date.strftime('%m/%d/%Y')}})
-
-    bulk.execute()
-
-
 if __name__ == "__main__":
     import_leagues()
     change_league_names()
-    update_match_string_date_to_datetime()
