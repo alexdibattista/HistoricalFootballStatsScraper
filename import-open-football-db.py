@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from itertools import izip
 from pymongo.errors import BulkWriteError
 from pprint import pprint
