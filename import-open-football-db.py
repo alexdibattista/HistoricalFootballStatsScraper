@@ -3,10 +3,8 @@ from itertools import izip
 from pymongo.errors import BulkWriteError
 from pprint import pprint
 import pymongo
-import glob
 import os
 import csv
-import json
 import datetime
 
 def import_leagues():
@@ -17,32 +15,40 @@ def import_leagues():
     bulk_matches = db.matches_collection.initialize_ordered_bulk_op()
     matches = []
 
-    for path, subdirs, files in os.walk("data/"):
+    for path, subdirs, files in os.walk("data/Italy/Serie A/2012-2013"):
         for name in files:
             print path
             
             with open(os.path.join(path, name), 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-                removeHeaders = next(reader)
+                reader = csv.reader(csvfile, delimiter=",") 
+
+                next(reader)  # skip header row
+
                 headers = ['Div','Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','HTHG','HTAG','HTR','Referee','HS','AS','HST','AST', 'HF', 'AF', 'HC', 'AC', 'HY', 'AY', 'HR', 'AR','B365H','B365D','B365A','BWH','BWD','BWA','IWH','IWD','IWA','LBH','LBD','LBA','PSH','PSD','PSA','WHH','WHD','WHA','SJH','SJD','SJA','VCH','VCD','VCA','Bb1X2','BbMxH','BbAvH','BbMxD','BbAvD','BbMxA','BbAvA','BbOU','BbMx>2_5','BbAv>2_5','BbMx<2_5','BbAv<2_5','BbAH','BbAHh','BbMxAHH','BbAvAHH','BbMxAHA','BbAvAHA']
+                
 
                 for line in reader:
+
                     if set(line).pop() != '':
                         matchList = iter(line)
                         match = dict(izip(headers, matchList))
+                        
+                        print match["HomeTeam"] + " " + match["AwayTeam"]
 
                         try:
                             match["Date"] = datetime.datetime.strptime(match["Date"], "%d/%m/%y")
                         except Exception, e:
                             match["Date"] = datetime.datetime.strptime(match["Date"], "%d/%m/%Y")
 
+
+
                         bulk_matches.insert(match)
-            
     try:
         print "Imported data"
         bulk_matches.execute()
     except BulkWriteError as bwe:
         pprint(bwe.details)
+
 
 def change_league_names():
     print "Updating League Names"
