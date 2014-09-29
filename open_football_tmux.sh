@@ -1,15 +1,22 @@
-setup_tmux_layout() {
-  tmux -new-window -a -n "$1" -c "$2"
+#!/usr/bin/tmux source-file
 
-  tmux split-window -h
-  tmux split-window -v
+tmux new-session -d
+tmux split-window -d -t 0 -v
+tmux split-window -d -t 0 -h
+tmux split-window -d -t 0 -v
+tmux split-window -d -t 2 -v
 
-}
+tmux send-keys -t 0 "cd ~/Documents/\"Personal Projects\"/OpenFootball" enter
+tmux send-keys -t 0 "nodemon" enter
 
-open_football_project() {
-  tmux new-window -a -n "$2" -c "$1"
+tmux send-keys -t 3 "cd ~/Documents/\"Personal Projects\"/OpenFootball" enter
+tmux send-keys -t 3 "mongo" enter
 
-  tmux send-keys "cd $2"
+tmux send-keys -t 2 "sudo mongod --dbpath /mongo/db/" enter
 
-  tmux split-window -h -c "$1"
-}
+
+tmux send-keys -t 4 "cd ~/Documents/\"Personal Projects\"/OpenFootball" enter
+
+tmux select-pane -t 4
+
+tmux attach
