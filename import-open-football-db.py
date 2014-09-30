@@ -1,53 +1,79 @@
 #!/usr/bin/python
 from itertools import izip
-from pymongo.errors import BulkWriteError
 from pprint import pprint
-import pymongo
-import os
+from pymongo.errors import BulkWriteError
+
+import codecs
 import csv
 import datetime
+import os
+import pymongo
 
 def import_leagues():
     db = pymongo.MongoClient().open_football
     #drop the old db
+    print "Drop old DB"
     db.matches_collection.drop()
     print "parsing CSV'S"
     bulk_matches = db.matches_collection.initialize_ordered_bulk_op()
     matches = []
-
-    for path, subdirs, files in os.walk("data/Italy/Serie A/2012-2013"):
+    record = 0
+    missed = 0
+    
+    for path, subdirs, files in os.walk("data"):
         for name in files:
-            print path
-            
+            # print path
+            record = 0
             with open(os.path.join(path, name), 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=",") 
+                try:
 
-                next(reader)  # skip header row
+                #     dialect = csv.Sniffer().sniff(csvfile.read(1024), delimiters=",")
+                #     # Perform various checks on the dialect (e.g., lineseparator,
+                #     # delimiter) to make sure it's sane
 
-                headers = ['Div','Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','HTHG','HTAG','HTR','Referee','HS','AS','HST','AST', 'HF', 'AF', 'HC', 'AC', 'HY', 'AY', 'HR', 'AR','B365H','B365D','B365A','BWH','BWD','BWA','IWH','IWD','IWA','LBH','LBD','LBA','PSH','PSD','PSA','WHH','WHD','WHA','SJH','SJD','SJA','VCH','VCD','VCA','Bb1X2','BbMxH','BbAvH','BbMxD','BbAvD','BbMxA','BbAvA','BbOU','BbMx>2_5','BbAv>2_5','BbMx<2_5','BbAv<2_5','BbAH','BbAHh','BbMxAHH','BbAvAHH','BbMxAHA','BbAvAHA']
-                
+                #     # Don't forget to reset the read position back to the start of
+                #     # the file before reading any entries.
+                #     print "CSV"
+                #     csvfile.seek(0)
 
-                for line in reader:
+                    reader = csv.reader(csvfile, delimiter=",", quotechar='|') 
 
-                    if set(line).pop() != '':
+                    next(reader)  # skip header row
+
+                    headers = ['Div','Date','HomeTeam','AwayTeam','FTHG','FTAG','FTR','HTHG','HTAG','HTR','Referee','HS','AS','HST','AST', 'HF', 'AF', 'HC', 'AC', 'HY', 'AY', 'HR', 'AR','B365H','B365D','B365A','BWH','BWD','BWA','IWH','IWD','IWA','LBH','LBD','LBA','PSH','PSD','PSA','WHH','WHD','WHA','SJH','SJD','SJA','VCH','VCD','VCA','Bb1X2','BbMxH','BbAvH','BbMxD','BbAvD','BbMxA','BbAvA','BbOU','BbMx>2_5','BbAv>2_5','BbMx<2_5','BbAv<2_5','BbAH','BbAHh','BbMxAHH','BbAvAHH','BbMxAHA','BbAvAHA']
+                    
+
+                    for idx, line in enumerate(reader):
                         matchList = iter(line)
                         match = dict(izip(headers, matchList))
                         
-                        print match["HomeTeam"] + " " + match["AwayTeam"]
+                        if line or not line.strip() == "" or ''.join(line.split(',')).strip() == '':
+                            # if set(line).pop() == '':
+                            #     print "passed:" + str(idx) + ":" + match["HomeTeam"] + " " + match["AwayTeam"]
+                            #     missed +=1
+                            # else:
+                            try:
+                                match["Date"] = datetime.datetime.strptime(match["Date"], "%d/%m/%y")
+                            except Exception, e:
+                                match["Date"] = datetime.datetime.strptime(match["Date"], "%d/%m/%Y")
 
-                        try:
-                            match["Date"] = datetime.datetime.strptime(match["Date"], "%d/%m/%y")
-                        except Exception, e:
-                            match["Date"] = datetime.datetime.strptime(match["Date"], "%d/%m/%Y")
+                            record += 1
+                            bulk_matches.insert(match)
+                        else:
+                            missed +=1
+                            print str(idx) + ":" + match["HomeTeam"] + " " + match["AwayTeam"]
 
+                except:
+                    # print err
+                    pass
 
-
-                        bulk_matches.insert(match)
-    try:
-        print "Imported data"
-        bulk_matches.execute()
-    except BulkWriteError as bwe:
-        pprint(bwe.details)
+            print str(os.path.join(path, name)) + str(record)
+    
+    print "Imported data"
+    result = bulk_matches.execute()
+    print missed
+    pprint(result)
+    
 
 
 def change_league_names():

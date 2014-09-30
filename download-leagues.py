@@ -47,8 +47,8 @@ def getLeagueContents(url, leagueUrl, args):
                 if "Data" in folderTitle:
                     folderTitle = re.sub('Data Files: ', '', folderTitle)
 
-                if not os.path.exists("data/" + folderTitle):
-                    os.makedirs("data/" + folderTitle)
+                if not os.path.exists("data/" + str(folderTitle)):
+                    os.makedirs("data/" + str(folderTitle))
 
         for anchor in anchors:
             if anchor:
@@ -83,8 +83,8 @@ def getLeagueContents(url, leagueUrl, args):
                     # with ProgressBar(widgets=[Percentage(), Bar()], maxval=10) as progress:
                     #   chunk_read(progress, response, report_hook=chunk_report)
 
-                    with open(csvfilepath, "w") as code:
-                        code.write(unicode(response.read(), errors='ignore'))
+                    with open(csvfilepath, "wb") as code:
+                        code.write(response.read())
 
 def getUrlContents(url, args):
     if args.p:
